@@ -1,0 +1,6 @@
+@Auction_Service_HostAddress = http://localhost:5081
+
+GET {{Auction_Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
