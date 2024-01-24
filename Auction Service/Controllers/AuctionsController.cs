@@ -16,6 +16,7 @@ namespace Auction_Service.Controllers
     {
         private readonly IMapper _mapper;
         private readonly AuctionDbContext _context;
+
         public AuctionsController(IMapper mapper, AuctionDbContext context)
         {
             _mapper = mapper;
@@ -32,7 +33,6 @@ namespace Auction_Service.Controllers
 
             return _mapper.Map<List<AuctionDto>>(auctions);
         }
-
 
         [HttpGet("{id}")]
         public async Task<ActionResult<AuctionDto>> GetAuctionById()
@@ -58,16 +58,15 @@ namespace Auction_Service.Controllers
             }
 
             return CreatedAtAction(nameof(GetAuctionById), new { auction.Id }, _mapper.Map<AuctionDto>(auction));
-
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateAuction(Guid id,UpdateAuctionDto updateAuctionDto)
+        public async Task<ActionResult> UpdateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
         {
             var auction = await _context.Auctions
                 .Include(x => x.Item)
-                .FirstOrDefaultAsync(x=> x.Id == id);
-            
+                .FirstOrDefaultAsync(x => x.Id == id);
+
             if (auction is null)
             {
                 return NotFound();
@@ -87,16 +86,13 @@ namespace Auction_Service.Controllers
             }
 
             return Ok();
-
         }
 
         [HttpDelete("{id}")]
-
         public async Task<ActionResult> DeleteAuction(Guid id)
         {
             var auction = await _context.Auctions.FirstOrDefaultAsync(x => x.Id == id);
-            if ( auction is null ) { return NotFound(); }
-
+            if (auction is null) { return NotFound(); }
 
             // TODO: Identity Check
 
@@ -109,8 +105,5 @@ namespace Auction_Service.Controllers
 
             return Ok();
         }
-
-
-
     }
 }
