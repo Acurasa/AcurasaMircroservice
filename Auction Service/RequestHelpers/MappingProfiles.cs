@@ -2,6 +2,7 @@
 using Auction_Service.Entities;
 using AuctionService.Entities;
 using AutoMapper;
+using Contracts;
 
 namespace Auction_Service.RequestHelpers
 {
@@ -14,6 +15,7 @@ namespace Auction_Service.RequestHelpers
             CreateMap<CreateAuctionDto, Auction>()
                 .ForMember(d => d.Item, o => o.MapFrom(s => s));
             CreateMap<CreateAuctionDto, Item>();
+            CreateMap<AuctionDto, AuctionCreated>();
         }
     }
 }

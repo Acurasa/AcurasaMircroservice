@@ -3,11 +3,10 @@ using Auction_Service.DTOs;
 using AuctionService.Entities;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Microsoft.AspNetCore.Http;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Auction_Service.Controllers
 {
@@ -17,9 +16,12 @@ namespace Auction_Service.Controllers
     {
         private readonly IMapper _mapper;
         private readonly AuctionDbContext _context;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public AuctionsController(IMapper mapper, AuctionDbContext context)
+        public AuctionsController(IMapper mapper, AuctionDbContext context,
+            IPublishEndpoint publishEndpoint)
         {
+            _publishEndpoint = publishEndpoint;
             _mapper = mapper;
             _context = context;
         }
@@ -31,7 +33,7 @@ namespace Auction_Service.Controllers
 
             if (!string.IsNullOrWhiteSpace(date))
             {
-                query = query.Where(x=> x.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
+                query = query.Where(x => x.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
             }
 
             return await query.ProjectTo<AuctionDto>(_mapper.ConfigurationProvider).ToListAsync();
@@ -54,13 +56,16 @@ namespace Auction_Service.Controllers
             auction.Seller = "TEST"; //placeholder for Identity Server
 
             _context.Auctions.Add(auction);
+            var newAuction = _mapper.Map<AuctionDto>(auction);
+
+            await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
 
             if (!(await _context.SaveChangesAsync() > 0))
             {
                 BadRequest($"Could not save Changes to the DB, Object : {nameof(auction)}");
             }
 
-            return CreatedAtAction(nameof(GetAuctionById), new { auction.Id }, _mapper.Map<AuctionDto>(auction));
+            return CreatedAtAction(nameof(GetAuctionById), new { auction.Id }, newAuction);
         }
 
         [HttpPut("{id}")]
