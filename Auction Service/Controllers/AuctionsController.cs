@@ -88,6 +88,8 @@ namespace Auction_Service.Controllers
             auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
             auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
 
+            await _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auction));
+
             if (!(await _context.SaveChangesAsync() > 0))
             {
                 BadRequest($"Could not save Changes to the DB, Object : {nameof(auction)}");
@@ -105,6 +107,8 @@ namespace Auction_Service.Controllers
             // TODO: Identity Check
 
             _context.Auctions.Remove(auction);
+
+            await _publishEndpoint.Publish<AuctionDeleted>(new { id = auction.Id.ToString() });
 
             if (!(await _context.SaveChangesAsync() > 0))
             {
