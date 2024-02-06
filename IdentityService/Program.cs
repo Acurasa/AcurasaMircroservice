@@ -16,13 +16,36 @@ try
         .Enrich.FromLogContext()
         .ReadFrom.Configuration(ctx.Configuration));
 
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll", builder =>
+        {
+            builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
+    });
+
     var app = builder
         .ConfigureServices()
         .ConfigurePipeline();
 
+    app.UseCors("AllowAll");
+
+
     // this seeding is only for the template to bootstrap the DB and users.
     // in production you will likely want a different approach.
     SeedData.EnsureSeedData(app);
+
+
+    app.Use(async (context, next) =>
+    {
+        context.Response.Headers.Append("Content-Security-Policy", "default-src 'unsafe-inline' 'unsafe-eval' *");
+        await next();
+    });
+
 
     app.Run();
 }
